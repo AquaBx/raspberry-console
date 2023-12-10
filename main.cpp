@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "pico_tone.hpp"
+#include "driver.hpp"
 
 #define BIT(d, off) (d & (off<<0b1))
 #define HIGH 1
@@ -25,23 +26,29 @@ enum note {
   silence
 };
 
-typedef enum {
-  /* screen */ /* gpio */ /* raspberry pin */
-  DT2         = 8 ,       // pin 11
-  DT3         = 9 ,       // pin 12
-  DT4         = 10,       // pin 14
-  DT5         = 11,       // pin 15
-  DT6         = 12,       // pin 16
-  DT7         = 13,       // pin 17
-  DT0         = 14,       // pin 19
-  DT1         = 15,       // pin 20
+int btns[] = {
+  0, // haut    violet
+  1, // bas     vert
+  2, // droite  orange
+  3, // gauche  rose
+  4, // b
+  5, // a
+};
 
-  RD          = 16,       // pin 21
-  WR          = 17,       // pin 22
-  RS          = 18,       // pin 24
-  CS          = 19,       // pin 25
-  RST         = 20,       // pin 26
-} PIN;
+int btns_color[] = {
+  0xc59a, // haut    violet
+  0xb7f0, // bas     vert
+  0xfd44, // droite  orange
+  0xed3c, // gauche  rose
+};
+
+int possibilites[] = {
+  NOTE_C4,
+  NOTE_D4,
+  NOTE_E4,
+  NOTE_F4
+};
+
 
 template<typename T>
 struct vector {
@@ -85,9 +92,23 @@ struct vector {
 
 void playliste(Tone myPlayer, vector<int> * notes_simon){
   for (int i=0;i<(*notes_simon).size;i++){
-    myPlayer.tone( (*notes_simon).data[i] );
+    int y = (*notes_simon).data[i];
+
+    myPlayer.tone( possibilites[y] );
+
+    ili9341::clear( btns_color[y] );
+    ili9341::draw_buffer();
+
     sleep_ms(100);
     myPlayer.stop();
+
+    renderer::set_clear_color(uint16_t c);
+
+
+    ili9341::clear();
+    ili9341::draw_buffer();
+
+    sleep_ms(10);
   }
 }
 
@@ -95,17 +116,13 @@ void playliste(Tone myPlayer, vector<int> * notes_simon){
 
 int main() {
 
-  // int melody[sizeof(notes) / sizeof(int)*2];
-
-  // fusion(notes,noteDurations,melody, sizeof(notes) / sizeof(int));
+  ili9341::initialize();
 
 	Tone myPlayer(28);
 	myPlayer.init(TONE_NON_BLOCKING) ;
 
   vector<int> notes_simon{};
-  
-  int btns[] = {11,10,9,8};
-  
+    
   for ( int i = 0 ; i < 4 ; i++ ){
     int btn = btns[i];
     
@@ -116,7 +133,6 @@ int main() {
 
   srand( time( NULL ) );  
 
-  int possibilites[] = {NOTE_C4,NOTE_D4,NOTE_E4,NOTE_F4};
 
   bool cond = true;
   int j = 0;
@@ -129,8 +145,7 @@ int main() {
     }
 
     if ( j == notes_simon.size ) {
-      int rng = rand() % 4;
-      notes_simon.append(possibilites[rng]);
+      notes_simon.append( rand() % 4 );
       playliste(myPlayer, &notes_simon);
       j=0;
     }
@@ -140,14 +155,14 @@ int main() {
 
     for (int y=0;  y < 4 ; y++){
       if (!gpio_get(btns[y]) && !clicked){
-        sel = possibilites[y];
+        sel = y;
         clicked=true;
       }
     }
 
     if (clicked){
       
-      myPlayer.tone(sel);
+      myPlayer.tone( possibilites[sel] );
       sleep_ms(100);
       myPlayer.stop();
       sleep_ms(100);
@@ -172,9 +187,6 @@ int main() {
         cond=true;
       }
     }
-
-
-
 
 	}
   return 0;
