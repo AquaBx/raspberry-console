@@ -1,8 +1,7 @@
 #include "driver.hpp"
 
+#include "stdlib.h"
 #include "pico/stdlib.h"
-
-#define BYTE_AT(buf, off) (buf >> (8 * off))
 
 namespace ili9341 {
 
@@ -26,6 +25,7 @@ namespace ili9341 {
 
 	enum class command : uint8_t {
 		sleep_out             = 0x11,
+		display_off           = 0x28,
 		display_on            = 0x29,
         column_address_set    = 0x2A,
         page_address_set      = 0x2B,
@@ -35,10 +35,25 @@ namespace ili9341 {
 		vcom1                 = 0xC5,
 	};
 
+	uint8_t operator>>(const command cmd, int shift) {
+		const uint8_t c = static_cast<uint8_t>(cmd);
+		return c >> shift;
+	}
+
+#define BYTE_AT(buf, off) (buf >> (8 * off))
+#define BIT_AT(buf, off) (0b1 & (buf >> off))
+
     void send(const command cmd);
 	void send(const uint8_t data);
 
     void initialize() {
+
+		{ 	// activate gpio_pin
+			for (int i = 8 ; i<=20 ; i++){
+				gpio_init(i);
+				gpio_set_dir(i, GPIO_OUT);
+			}
+		}	// activate gpio_pin
 
 		{ // reset display initial state
 
@@ -76,15 +91,15 @@ namespace ili9341 {
 		// set
 		// display position base (x = 0bX1XXXX00 | y = 0b1XXXXX00)
 		// and
-		// color format (rgb = 0bXXXX0X00 | bgr = 0bXXXX1X00)
+		// color format ( bgr = 0bXXXX0X00 | rgb = 0bXXXX1X00)
 
 		{ // Memory Access Control (ili9341-datasheet.pdf page 127)
 
 			send(command::memory_access_control);
 
 			// dans son exemple il utilise le code 0x48 <=> 0b0101000
-			// il active donc les bits MX et color format BGR
-			send(0b00000000);
+			// il active donc les bits MX et color format RGB
+			send(0b00001000);
 
 		} // Memory Access Control
 
@@ -109,7 +124,6 @@ namespace ili9341 {
 		{ // display on (ili9341-datasheet.pdf page 109)
 
 			send(command::display_on);
-			send(0b00101001);
 
 		} // display on
 	}
@@ -126,6 +140,14 @@ namespace ili9341 {
 		gpio_put((uint)pin::wr, false);
 
 		/*  SEND THE DATA TO THE PINS */
+		gpio_put((uint)pin::data0, BIT_AT(byte, 0));
+		gpio_put((uint)pin::data1, BIT_AT(byte, 1));
+		gpio_put((uint)pin::data2, BIT_AT(byte, 2));
+		gpio_put((uint)pin::data3, BIT_AT(byte, 3));
+		gpio_put((uint)pin::data4, BIT_AT(byte, 4));
+		gpio_put((uint)pin::data5, BIT_AT(byte, 5));
+		gpio_put((uint)pin::data6, BIT_AT(byte, 6));
+		gpio_put((uint)pin::data7, BIT_AT(byte, 7));
 
 		// deactivate MOSI (we have finished sending the data)
 		gpio_put((uint)pin::wr, true);
@@ -143,6 +165,14 @@ namespace ili9341 {
 		gpio_put((uint)pin::wr, false);
 
 		/*  SEND THE DATA TO THE PINS */
+		gpio_put((uint)pin::data0, BIT_AT(byte, 0));
+		gpio_put((uint)pin::data1, BIT_AT(byte, 1));
+		gpio_put((uint)pin::data2, BIT_AT(byte, 2));
+		gpio_put((uint)pin::data3, BIT_AT(byte, 3));
+		gpio_put((uint)pin::data4, BIT_AT(byte, 4));
+		gpio_put((uint)pin::data5, BIT_AT(byte, 5));
+		gpio_put((uint)pin::data6, BIT_AT(byte, 6));
+		gpio_put((uint)pin::data7, BIT_AT(byte, 7));
 
 		// deactivate MOSI (we have finished sending the data)
 		gpio_put((uint)pin::wr, true);
@@ -162,17 +192,45 @@ namespace ili9341 {
         send(BYTE_AT(end_row,   0));
     }
 
-    /* ------------ DRAW COMMANDS ------------ */
+	uint16_t buffer[76800] = {0};
 
     void draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
-        set_draw_region(y, y+1, x, x+1);
-        send(command::memory_write);
-        send(BYTE_AT(color, 1));
-        send(BYTE_AT(color, 0));
+		buffer[x*240+y] = color;
     }
 
-    /* --------------------------------------- */
+
+	void draw_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color){
+		int xmin = x;
+		int xmax = x+width;
+		int ymin = y;
+		int ymax = y+height;
+
+		for(int i=xmin;i<xmax;i++){
+			for(int j=ymin;j<ymax;j++) {
+				draw_pixel(i,j,color);
+			}
+		}
+	}
+	
+	void clear(uint16_t color) {	
+		for(int i=0; i < sizeof(buffer)/sizeof(uint16_t) ; i++){
+			buffer[i] = {color};
+		}
+	}
+
+	void draw_buffer(){
+		set_draw_region(0,240,0,320);
+		send(command::memory_write);
+
+		for(int i=0; i < sizeof(buffer)/sizeof(uint16_t) ; i++){
+			send(BYTE_AT(buffer[i], 1));
+			send(BYTE_AT(buffer[i], 0));
+		}
+	}
+
 
 } // namespace ili9341
 
+
 #undef BYTE_AT
+#undef BIT_AT
