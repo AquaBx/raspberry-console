@@ -13,7 +13,7 @@ pico_sdk_init()
 
 add_executable(hello_world
     main.cpp
-    driver.cpp
+    driver_rel/driver.cpp
 )
 
 # Add pico_stdlib library which aggregates commonly used features
