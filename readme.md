@@ -11,3 +11,4 @@ copy ${env:PICO_EXAMPLES_PATH}\pico-examples\.vscode . -recurse
 | [Arduino Shield ILI9341 TF028](https://www.gotronic.fr/art-shield-ecran-tactile-2-8-tf028-28507.htm) | ![image](https://github.com/AquaBx/raspberry-console/assets/35542432/de91fb03-e3b7-4ff7-a440-d8dfd62801d7) |
 | [Module HP SKU00060](https://www.gotronic.fr/art-module-hp-sku00060-28208.htm) | ![image](https://github.com/AquaBx/raspberry-console/assets/35542432/8f036b66-a1d8-41c5-88a5-9a532d69bc62)
 
+![tpelek2_bb](https://github.com/AquaBx/raspberry-console/assets/35542432/8d52c7aa-8f0d-4101-bda7-b0a0ad6eb1af)
