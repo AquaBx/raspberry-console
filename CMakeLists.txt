@@ -5,19 +5,22 @@ cmake_minimum_required(VERSION 3.13)
 include(pico_sdk_import.cmake)
 
 project(my_project C CXX ASM)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 17)
 
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# rest of your project
+add_executable(pico-game)
 
-add_executable(hello_world
+target_sources(pico-game PUBLIC
     main.cpp
-    driver_rel/driver.cpp
+    driver.cpp
+    controller.cpp
+    sound.cpp
 )
 
-# Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(hello_world 
+target_link_libraries(pico-game 
     pico_stdlib
     hardware_gpio
     hardware_pwm
@@ -27,7 +30,5 @@ target_link_libraries(hello_world
 
 add_subdirectory(pico-tone build)
 
-
-
 # create map/bin/hex/uf2 file in addition to ELF.
-pico_add_extra_outputs(hello_world)
+pico_add_extra_outputs(pico-game)
