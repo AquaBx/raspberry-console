@@ -210,52 +210,81 @@ namespace ili9341 {
         send(BYTE(x_end,   0));
     }
 
-    void line_y(uint16_t x, uint16_t y, uint16_t length, uint16_t color) {
+    void line_y(uint16_t x, uint16_t y, uint16_t length, uint16_t c) {
         set_draw_region(x, x+1, y, y+length);
         send(command::memory_write);
 
         for(uint16_t i = y; i < length; i++) {
-            send(BYTE(color, 1));
-            send(BYTE(color, 0));
+            send(BYTE(c, 1));
+            send(BYTE(c, 0));
         }
     }
 
-    void line_x(uint16_t x, uint16_t y, uint16_t length, uint16_t color) {
+    void line_y(uint16_t x, uint16_t y, uint16_t length, color c) {
+		line_y(x, y, length, (uint16_t)c);
+	}
+
+    void line_x(uint16_t x, uint16_t y, uint16_t length, uint16_t c) {
         set_draw_region(x, x+length, y, y);
         send(command::memory_write);
 
         for(uint16_t i = x; i < length; i++) {
-            send(BYTE(color,1));
-            send(BYTE(color,0));
+            send(BYTE(c, 1));
+            send(BYTE(c, 0));
         }
     }
 
-    void rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
-        line_x(x        , y         , width , color);
-        line_x(x        , y + height, width , color);
-        line_y(x        , y         , height, color);
-        line_y(x + width, y         , height, color);
+    void line_x(uint16_t x, uint16_t y, uint16_t length, color c) {
+		line_x(x, y, length, (uint16_t)c);
+	}
+
+    void rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t c) {
+        line_x(x        , y         , width , c);
+        line_x(x        , y + height, width , c);
+        line_y(x        , y         , height, c);
+        line_y(x + width, y         , height, c);
     }
 
-    void fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
+    void rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color c) {
+		rect(x, y, width, height, (uint16_t)c);
+	}
+
+    void fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t c) {
         set_draw_region(x, x+width, y, y+height);
         send(command::memory_write);
 
         for(uint32_t i = 0; i < width*height; i++) {
-            send(BYTE(color, 1));
-            send(BYTE(color, 0));
+            send(BYTE(c, 1));
+            send(BYTE(c, 0));
         }
     }
 
-    void clear(uint16_t color) {
+    void fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color c) {
+		fill_rect(x, y, width, height, (uint16_t)c);
+	}
+
+    void clear(uint16_t c) {
         set_draw_region(0, width, 0, height);
         send(command::memory_write);
 
         for(uint32_t i = 0; i < width * height; i += 4) {
-            send(BYTE(color, 1));
-            send(BYTE(color, 0));
+            send(BYTE(c, 1));
+            send(BYTE(c, 0));
+
+			send(BYTE(c, 1));
+            send(BYTE(c, 0));
+
+			send(BYTE(c, 1));
+            send(BYTE(c, 0));
+
+			send(BYTE(c, 1));
+            send(BYTE(c, 0));
         }
     }
+
+    void clear(color c) {
+		clear((uint16_t)c);
+	}
 
     /* --------------------------------------------------------------- */
 

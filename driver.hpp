@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "colors.hpp"
+
 namespace ili9341 {
 
     constexpr inline uint16_t width = 320, height = 240;
@@ -39,8 +41,9 @@ namespace ili9341 {
 	 * @param length length of the line in pixels : must satisfy 0 < length < 240 - y
 	 * @param color rgb color 16 bit depth
 	*/
-    void line_y(uint16_t x, uint16_t y, uint16_t length, uint16_t color);
-    
+    void line_y(uint16_t x, uint16_t y, uint16_t length, uint16_t c);
+    void line_y(uint16_t x, uint16_t y, uint16_t length, color c);
+
     /**
 	 * @brief draw a line vertically
 	 * 
@@ -49,7 +52,8 @@ namespace ili9341 {
 	 * @param length length of the line in pixels : must satisfy 0 < length < 320 - x
 	 * @param color rgb color 16 bit depth
 	*/
-    void line_x(uint16_t x, uint16_t y, uint16_t length, uint16_t color);
+    void line_x(uint16_t x, uint16_t y, uint16_t length, uint16_t c);
+    void line_x(uint16_t x, uint16_t y, uint16_t length, color c);
     
     /**
 	 * @brief draw a rectangular frame
@@ -60,7 +64,8 @@ namespace ili9341 {
 	 * @param height height of the rectangle in pixels : must satisfy 0 < height < 240 - y
 	 * @param color rgb color 16 bit depth
 	*/
-    void rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color);
+    void rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t c);
+    void rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color c);
     
     /**
 	 * @brief fill a rectangle
@@ -71,13 +76,15 @@ namespace ili9341 {
 	 * @param height height of the rectangle in pixels : must satisfy 0 < height < 240 - y
 	 * @param color rgb color 16 bit depth
 	*/
-    void fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color);
+    void fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t c);
+    void fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, color c);
 
     /**
      * @brief clear entire screen with the provided color
      * 
      * @param color rgb color 16 bit depth
     */
-    void clear(uint16_t color);
+    void clear(uint16_t c);
+    void clear(color c);
 
 } // namespace ili9341

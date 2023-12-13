@@ -1,3 +1,5 @@
+#include <pico/stdlib.h>
+
 #include "driver.hpp"
 #include "sound.hpp"
 #include "controller.hpp"
@@ -5,14 +7,22 @@
 
 int main(void) {
 	ili9341::initialize();
-	bool redraw = true;
+	controller::initialize();
 
 	while(true) {
-		if(redraw) {
+		if(controller::is_pressed(controller::button::up)) {
+			ili9341::clear(color::red);
+		} else if(controller::is_pressed(controller::button::down)) {
+			ili9341::clear(color::magenta);
+		} else if(controller::is_pressed(controller::button::right)) {
+			ili9341::clear(color::yellow);
+		} else if(controller::is_pressed(controller::button::left)) {
+			ili9341::clear(color::green);
+		} else if(controller::is_pressed(controller::button::a)) {
 			ili9341::clear(color::black);
-			ili9341::fill_rect(100, 0, 200, 100, color::red);
-			ili9341::rect(0, 0, 10, 100, color::white);
-			redraw = false;
+		} else if(controller::is_pressed(controller::button::b)) {
+			ili9341::clear(color::white);
 		}
+		sleep_ms(100);
 	}
 }
