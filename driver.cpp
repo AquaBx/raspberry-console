@@ -6,6 +6,10 @@ namespace ili9341 {
 #define BYTE(bitfield, index) (0xFF & (bitfield >> (8 * index)))
 #define BIT(bitfield, index) (0b1 & (bitfield >> index))
 
+	/**
+	 * @note at the moment we hard code the pins, but it would be better
+	 * to take in an enum to describe the pins that the user wants to use
+	*/
     enum class pin : uint8_t {
 		/* screen */ /* gpio */ /* raspberry pin */
 		data0         = 14,       // pin 19
@@ -24,6 +28,9 @@ namespace ili9341 {
 		rst           = 20,       // pin 26
 	};
 
+	/**
+	 * @brief commands hexacodes for the ili9341 display. (this enum allows to use the `send` function overload to send commands)
+	*/
 	enum class command : uint8_t {
 		sleep_out             = 0x11,
 		display_off           = 0x28,
@@ -36,11 +43,17 @@ namespace ili9341 {
 		vcom1                 = 0xC5,
 	};
 
+	/**
+	 * @brief simple bitshift overload to avoid casting `command` enum to `uint8_t`
+	*/
     uint8_t operator>>(const command cmd, int shift) {
 		const uint8_t c = static_cast<uint8_t>(cmd);
 		return c >> shift;
 	}
 
+	/**
+	 * 
+	*/
     void send(const command byte) {
 		// send command ==> rs = 0
 		gpio_put((uint)pin::rs, false);
@@ -66,6 +79,9 @@ namespace ili9341 {
 		gpio_put((uint)pin::wr, true);
 	}
 
+	/**
+	 * 
+	*/
     void send(const uint8_t byte) {
 		// send data ==> rs = 1
 		gpio_put((uint)pin::rs, true);
@@ -102,21 +118,16 @@ namespace ili9341 {
 
         { // reset display initial state
 
-			// voir si ça à un impact sur le init
-			// pour le code arduino les temps sont
-			// multipliés par 10
-			const unsigned int multiplier = (true) ? 10 : 1;
-
 			// make sure reset is not active
 			gpio_put((uint)pin::rst, true);
-			sleep_ms(5 * multiplier);
+			sleep_ms(50);
 
 			// initiate reset
 			gpio_put((uint)pin::rst, false);
-			sleep_ms(15 * multiplier);
+			sleep_ms(150);
 
 			gpio_put((uint)pin::rst, true);
-			sleep_ms(15 * multiplier);
+			sleep_ms(150);
 
 		} // reset display initial state
 
@@ -199,14 +210,6 @@ namespace ili9341 {
         send(BYTE(x_end,   0));
     }
 
-	/**
-	 * @brief draw a line horizontally
-	 * 
-	 * @param x distance from the left of the screen : must satisfy 0 <= x < 320
-	 * @param y distance from the top of the screen : must satisfy 0 <= y < 240 - length
-	 * @param length length of the line in pixels : must satisfy 0 < length < 240 - y
-	 * @param color rgb color 16 bit depth
-	*/
     void line_y(uint16_t x, uint16_t y, uint16_t length, uint16_t color) {
         set_draw_region(x, x+1, y, y+length);
         send(command::memory_write);
@@ -217,14 +220,6 @@ namespace ili9341 {
         }
     }
 
-	/**
-	 * @brief draw a line vertically
-	 * 
-	 * @param x distance from the left of the screen : must satisfy 0 <= x < 320 - length
-	 * @param y distance from the top of the screen : must satisfy 0 <= y < 240
-	 * @param length length of the line in pixels : must satisfy 0 < length < 320 - x
-	 * @param color rgb color 16 bit depth
-	*/
     void line_x(uint16_t x, uint16_t y, uint16_t length, uint16_t color) {
         set_draw_region(x, x+length, y, y);
         send(command::memory_write);
@@ -235,15 +230,6 @@ namespace ili9341 {
         }
     }
 
-	/**
-	 * @brief draw a rectangular frame
-	 * 
-	 * @param x distance from the left of the screen : must satisfy 0 <= x < 320 - width
-	 * @param y distance from the top of the screen : must satisfy 0 <= y < 240 - height
-	 * @param width width of the rectangle in pixels : must satisfy 0 < width < 320 - x
-	 * @param height height of the rectangle in pixels : must satisfy 0 < height < 240 - y
-	 * @param color rgb color 16 bit depth
-	*/
     void rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
         line_x(x        , y         , width , color);
         line_x(x        , y + height, width , color);
@@ -251,15 +237,6 @@ namespace ili9341 {
         line_y(x + width, y         , height, color);
     }
 
-	/**
-	 * @brief fill a rectangle
-	 * 
-	 * @param x distance from the left of the screen : must satisfy 0 <= x < 320 - width
-	 * @param y distance from the top of the screen : must satisfy 0 <= y < 240 - height
-	 * @param width width of the rectangle in pixels : must satisfy 0 < width < 320 - x
-	 * @param height height of the rectangle in pixels : must satisfy 0 < height < 240 - y
-	 * @param color rgb color 16 bit depth
-	*/
     void fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
         set_draw_region(x, x+width, y, y+height);
         send(command::memory_write);
