@@ -17,7 +17,6 @@ target_sources(pico-game PUBLIC
     main.cpp
     driver.cpp
     controller.cpp
-    sound.cpp
 )
 
 target_link_libraries(pico-game 
