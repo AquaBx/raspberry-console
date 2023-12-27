@@ -7,7 +7,7 @@
 #include <time.h>
 
 #include "pico_tone.hpp"
-#include "driver.hpp"
+#include "driver_rel/driver.hpp"
 
 #define BIT(d, off) (d & (off<<0b1))
 #define HIGH 1
@@ -89,7 +89,6 @@ struct vector {
 
 };
 
-
 void playliste(Tone myPlayer, vector<int> * notes_simon){
   for (int i=0;i<(*notes_simon).size;i++){
     int y = (*notes_simon).data[i];
@@ -102,10 +101,8 @@ void playliste(Tone myPlayer, vector<int> * notes_simon){
     sleep_ms(100);
     myPlayer.stop();
 
-    renderer::set_clear_color(uint16_t c);
 
-
-    ili9341::clear();
+    ili9341::clear(0);
     ili9341::draw_buffer();
 
     sleep_ms(10);
@@ -168,7 +165,6 @@ int main() {
       sleep_ms(100);
 
       if ( sel == notes_simon.data[j] ){
-        sleep_ms(1000);
         j++;
       }
       else {
@@ -181,11 +177,13 @@ int main() {
         sleep_ms(100);
         myPlayer.stop();
 
-        sleep_ms(1000);
         
         j=0;
         cond=true;
       }
+
+      sleep_ms(100);
+
     }
 
 	}
