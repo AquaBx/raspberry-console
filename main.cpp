@@ -10,12 +10,10 @@ int main(void) {
 	ili9341::initialize();
 	controller::initialize();
 
-	Tone player(/*pin: */ 28, 100, 100, 100, 100, 100, 100, 100);
+	Tone player(/* pin: */ 28, 80, 5, 5, 10);
 	player.init(/* blocking: */ false);
 
 	ili9341::clear(color::black);
 
-	while(true) {
-
-	}
+	while(true) {}
 }
