@@ -1,3 +1,8 @@
+
+
+https://github.com/AquaBx/raspberry-console/assets/35542432/7b45ecbe-fb21-44f1-9c8d-66e7386b8d4b
+
+
 # Compiler le code
 
 Installer la toolchain du Raspberry Pico, pour [Windows](https://github.com/raspberrypi/pico-setup-windows/releases/)
