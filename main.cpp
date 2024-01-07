@@ -7,48 +7,34 @@
 #include <time.h>
 
 #include "pico_tone.hpp"
-#include "driver_rel/driver.hpp"
+#include "driver.hpp"
+#include "controller.hpp"
 
-#define BIT(d, off) (d & (off<<0b1))
-#define HIGH 1
-#define LOW  0
+struct button
+{
+	/* data */
+	controller::button id;
+	color c;
+	int x;
+	int y;
+	int note;
 
-enum division {
-  ronde = 1,
-  blanche = 2,
-  noire = 4,
-  croche = 8,
-  double_croche = 16,
-  tripple_croche = 32,
+	void play(Tone player){
+		ili9341::fill_rect( this -> x, this -> y,60,60, this -> c );
+		player.tone( this -> note );
+		sleep_ms(100);
+		player.stop();
+		ili9341::fill_rect( this -> x, this -> y,60,60,0 );
+	}
+
 };
 
-enum note {
-  silence
+button buttons[] = {
+	[0] = button{controller::button::up   , color::violet  , 130 , 15  , NOTE_C4},
+	[1] = button{controller::button::down , color::green   , 130 , 165 , NOTE_D4},
+	[2] = button{controller::button::right, color::gold    , 205 , 90  , NOTE_E4},
+	[3] = button{controller::button::left , color::fuchsia , 55  , 90  , NOTE_F4},
 };
-
-int btns[] = {
-  0, // haut    violet
-  1, // bas     vert
-  2, // droite  orange
-  3, // gauche  rose
-  4, // b
-  5, // a
-};
-
-int btns_color[] = {
-  0xc59a, // haut    violet
-  0xb7f0, // bas     vert
-  0xfd44, // droite  orange
-  0xed3c, // gauche  rose
-};
-
-int possibilites[] = {
-  NOTE_C4,
-  NOTE_D4,
-  NOTE_E4,
-  NOTE_F4
-};
-
 
 template<typename T>
 struct vector {
@@ -57,135 +43,113 @@ struct vector {
   unsigned int capacity = 0, size = 0;
 
   vector()
-    : data(new T[20]), capacity(20), size(0)
+	: data(new T[20]), capacity(20), size(0)
   {}
 
   ~vector() {
-    if(this->data)
-      delete this->data;
+	if(this->data)
+	  delete this->data;
 
-    this->data = nullptr;
-    this->size = 0;
-    this->capacity = 0;
+	this->data = nullptr;
+	this->size = 0;
+	this->capacity = 0;
   }
 
   void append(T element) {
-    if(this->size >= this->capacity) {
-      T* old = this->data;
-      this->capacity += 10;
-      this->data = new T[this->capacity];
-      for(unsigned int i = 0; i < this->size; i++) {
-        this->data[i] = old[i];
-      }
-      delete old;
-    }
-    this->data[this->size] = element;
-    this->size++;
+	if(this->size >= this->capacity) {
+	  T* old = this->data;
+	  this->capacity += 10;
+	  this->data = new T[this->capacity];
+	  for(unsigned int i = 0; i < this->size; i++) {
+		this->data[i] = old[i];
+	  }
+	  delete old;
+	}
+	this->data[this->size] = element;
+	this->size++;
   }
 
   void reset() {
-    this->size = 0;
+	this->size = 0;
   }
 
 };
 
 void playliste(Tone myPlayer, vector<int> * notes_simon){
-  for (int i=0;i<(*notes_simon).size;i++){
-    int y = (*notes_simon).data[i];
-
-    myPlayer.tone( possibilites[y] );
-
-    ili9341::clear( btns_color[y] );
-    ili9341::draw_buffer();
-
-    sleep_ms(100);
-    myPlayer.stop();
-
-
-    ili9341::clear(0);
-    ili9341::draw_buffer();
-
-    sleep_ms(10);
-  }
+	for (int i=0;i<(*notes_simon).size;i++){
+		int y = (*notes_simon).data[i];
+		buttons[y].play(myPlayer);
+		sleep_ms(10);
+	}
 }
 
-
+void play_game_over(Tone myPlayer) {
+	for ( int i; i<2;i++){
+		myPlayer.tone(NOTE_D1);
+		sleep_ms(100);
+		myPlayer.stop();
+	}
+}
 
 int main() {
 
-  ili9341::initialize();
-
+	ili9341::initialize();
+	controller::initialize();
+	
 	Tone myPlayer(28);
 	myPlayer.init(TONE_NON_BLOCKING) ;
 
-  vector<int> notes_simon{};
-    
-  for ( int i = 0 ; i < 4 ; i++ ){
-    int btn = btns[i];
-    
-    gpio_init(btn);
-    gpio_set_dir(btn, GPIO_IN);
-    gpio_pull_up(btn);
-  }
-
-  srand( time( NULL ) );  
-
-
-  bool cond = true;
-  int j = 0;
+	vector<int> notes_simon{};
+	ili9341::clear(color::black);
+		
+	
+	srand( time( NULL ) );
+	
+	bool cond = true;
+	int j = 0;
 
 	while (true) {
 
-    if (cond) {
-      notes_simon.reset();
-      cond = false;
-    }
+		if (cond) {
+			notes_simon.reset();
+			cond = false;
+		}
 
-    if ( j == notes_simon.size ) {
-      notes_simon.append( rand() % 4 );
-      playliste(myPlayer, &notes_simon);
-      j=0;
-    }
+		if ( j == notes_simon.size ) {
+			notes_simon.append( rand() % 4 );
+			playliste(myPlayer, &notes_simon);
+			j=0;
+		}
 
-    int sel;
-    bool clicked = false;
+		int sel;
+		bool clicked = false;
 
-    for (int y=0;  y < 4 ; y++){
-      if (!gpio_get(btns[y]) && !clicked){
-        sel = y;
-        clicked=true;
-      }
-    }
+		for (int y=0; y < 4 ; y++){
+			if (controller::is_pressed(buttons[y].id) && !clicked){
+				sel = y;
+				clicked=true;
+			}
+		}
 
-    if (clicked){
-      
-      myPlayer.tone( possibilites[sel] );
-      sleep_ms(100);
-      myPlayer.stop();
-      sleep_ms(100);
+		if (clicked){
+		
+			buttons[sel].play(myPlayer);
 
-      if ( sel == notes_simon.data[j] ){
-        j++;
-      }
-      else {
+			sleep_ms(100);
 
-        myPlayer.tone(NOTE_D1);
-        sleep_ms(100);
-        myPlayer.stop();
+			if ( sel == notes_simon.data[j] ){
+				j++;
+			}
+			else {
+				play_game_over(myPlayer);
+				j=0;
+				cond=true;
+			}
 
-        myPlayer.tone(NOTE_D1);
-        sleep_ms(100);
-        myPlayer.stop();
+			sleep_ms(100);
 
-        
-        j=0;
-        cond=true;
-      }
-
-      sleep_ms(100);
-
-    }
+		}
 
 	}
-  return 0;
+	return 0;
 }
