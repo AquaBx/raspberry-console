@@ -1,12 +1,14 @@
+# Compiler le code
+
 Installer la toolchain du Raspberry Pico, pour [Windows](https://github.com/raspberrypi/pico-setup-windows/releases/)
 
-## copie du dépot
+## Copie du dépot
 ```
 git clone https://github.com/AquaBx/raspberry-console
 cd raspberry-console
 ```
 
-## copie des fichiers de configuration
+## Copie des fichiers de configuration
 ⚠️ si les dossiers ne sont pas configurer dans le path, il se peut que les commandes fassent une erreur
 vous pouvez sinon copier les dossiers manuellement.
 ```
